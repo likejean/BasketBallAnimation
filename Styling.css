@@ -1,0 +1,26 @@
+body{
+	margin: 15px;
+}
+#frame {
+    border: 1px solid red;
+	height: 400px;	
+	width: 700px;
+	background: powderblue;
+}
+
+.btn{
+	width: 332px;
+	margin: 5px 15px 15px 5px;
+	font-size: 20px;
+	font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+}
+
+.wall{
+	width: 450px;
+	height: 1050px;
+}
+
+
+
+
+	
