@@ -1,0 +1,23 @@
+{
+  "name": "freefallball2",
+  "version": "1.0.0",
+  "description": "This is just a test directory to learn Git and Node",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/likejean/BasketBallAnimation.git"
+  },
+  "keywords": [
+    "Sergey",
+    "Popach"
+  ],
+  "author": "Sergey Popach",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/likejean/BasketBallAnimation/issues"
+  },
+  "homepage": "https://github.com/likejean/BasketBallAnimation#readme"
+}
