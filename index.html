@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<link rel="stylesheet" type="text/css" href="Styling.css">
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
+		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"></script>
+		<script src="node_modules/svg.js/dist/svg.js"></script>
+		<script src="node_modules/svg.draw.js/dist/svg.draw.js"></script>		  
+	</head>
+	<body onload = "the_timer = setInterval(set_timer, increment_t)">
+	<H1>My Ball Animation</H1>
+	<svg id="frame" viewBox="0 0 2000 1000">		
+		<defs>			
+			<filter id ="image">
+				<feImage xlink:href="Basketball.png"/>
+			</filter>
+			<filter id ="f2" x="0" y="0" width="105" height="105">
+				<feOffset result="offOut" in="SourceGraphic" dx="10" dy="0" />
+				<feColorMatrix result = "matrixOut" in = "offOut" type = "matrix" values = "0.2 0 0 0 0 0 0.2 0 0 0 0 0 0.2 0 0 0 0 0 1 0"/>
+				<feGaussianBlur result="blurOut" in="matrixOut" stdDeviation="3" />
+				<feBlend in="SourceGraphic" in2="blurOut" mode="normal" />
+			</filter>			
+		</defs>			
+		<g filter="url(#f2)">
+			<circle id = "circle" cx="150" cy="80" r="50" stroke="green" stroke-width="2" style="filter:url(#image)";>
+				<animateTransform 
+				id = "trans"
+				attributeName="transform"
+				attributeType="XML"
+				type="rotate"
+				from="0 150 80"
+				to="360 150 80"
+				dur="1s"
+				repeatCount="indefinite"/> 
+			</circle>
+		</g>
+		<defs>
+			<pattern id="img1" patternUnits="userSpaceOnUse" width="100%" height="105%">
+				<image class='wall' xlink:href="bricks.jpg" x="0" y="0"
+					width="450" height="1100" />
+			</pattern>		
+		</defs>		  
+		<rect id = "wall" x="0" y="200" width="475" height="1075" stroke="none" fill="url(#img1)"></rect>
+		<line x1="500" y1="555" x2="1500" y2="555" style="stroke:black; stroke-width:10"></line>
+	</svg><br>
+	<button type="button" class="btn btn-danger" onclick = clearTimeout(the_timer)>STOP</button>
+	<button type="button" class="btn btn-success" onclick = 'the_timer = setInterval(set_timer, increment_t)'>RESUME</button>
+	<script>
+		//Initialization Variables
+		var position_vec = {x:500, y:75};
+		var velocity_vec = {x:200, y:0};
+		var angular_position = {prev:0, next:0};
+		var _time = {x:0, y:0, l:0};
+		var _line = {x:500, y:555};
+		var _direction = {x:"right", y:"down"};		
+		var increment_t = 5,
+		delta = increment_t/1000, 
+		circle, line, slope, trans, duration = 0, 
+		radius, the_timer, leftwall, brickbase,
+		count = 0;		
+	
+		//Calculation functions
+		var vel_y = (t) => 188.81 * t + velocity_vec.y;
+		var pos_y = (t) => 188.81 * Math.pow(t,2) / 2 + velocity_vec.y * t + position_vec.y;
+		var vel_x = (t) => velocity_vec.x;
+		var pos_x = (t) => velocity_vec.x * t + position_vec.x;
+		var ln = (t) => 25*Math.sin(4*t);
+		var slope = () => (line.y2.animVal.value - line.y1.animVal.value)/
+		(line.x2.animVal.value - line.x1.animVal.value);
+		var correction = () => Math.tan(angle()*Math.PI/180)*Math.cos(angle()*Math.PI/180)*circle.r.animVal.value;
+		var impact = () => slope() * circle.cx.animVal.value + line.y1.animVal.value - Math.tan(angle()*Math.PI/180) * _line.x ;
+		var angle = () => Math.atan(slope())*180/Math.PI;
+		var rotation = (v,t) => Math.round(v / radius * t * 2 * 360 / 20);
+		//The main function to run this game...
+		function set_timer(){
+			circle = document.getElementsByTagName("circle")[0];
+			line = document.getElementsByTagName("line")[0];
+			trans = document.getElementById("trans");
+			radius = document.getElementsByTagName("circle")[0].getAttribute("r");
+			wall = document.getElementById("wall");
+			// console.log(wall);
+			
+			(circle.cy.animVal.value > 200) ? leftwall = 500 : leftwall = 35;				
+			(circle.cx.animVal.value > 450) ? brickbase = impact() - correction() - 48 : brickbase = 150;
+			
+			if (wall_edge_zone() && circle.cx.animVal.value < 500 && circle.cx.animVal.value > 425){
+				var vel_obj, before, after, shift;				
+				before = pos_x(_time.x);
+				position_vec.y = pos_y(_time.y);				
+				vel_obj = wall_edge_deflect (vel_x(_time.x), vel_y(_time.y),wall_edge_zone());
+				console.log(vel_obj);		
+				console.log(vel_x(_time.x));
+				console.log(vel_y(_time.y));
+				velocity_vec.x = vel_obj[0];
+				after = pos_x(_time.x);
+				shift = after - before;
+				position_vec.x -= shift;
+				velocity_vec.y = vel_obj[1];		
+			} 			
+			
+			if (circle.cy.animVal.value < 50 && _direction.y === "up"){S
+				_direction.y = "down";
+				position_vec.y = pos_y(_time.y);								
+				velocity_vec.y = -board_deflect (velocity_vec.x, vel_y(_time.y))[1];						
+				_time.y = 0;				
+			}
+
+			else if (circle.cy.animVal.value > brickbase && _direction.y === "down" && count === 1){
+				_direction.y = "up";				
+				var vel_obj, before, after, shift, sign = 1;				
+				before = pos_x(_time.x);
+				position_vec.y = pos_y(_time.y);
+				if (vel_x(_time.x)<0){
+					var sign = -1;				
+				}
+				vel_obj = board_deflect (vel_x(_time.x), vel_y(_time.y));				
+				velocity_vec.x = sign * vel_obj[0];
+				after = pos_x(_time.x);
+				shift = after - before;
+				position_vec.x -= shift;
+				velocity_vec.y = -vel_obj[1];
+				angular_position.prev = angular_position.next;
+				angular_position.next = rotation(_time.y, velocity_vec.x)	
+				
+				if (velocity_vec.y >= 0){
+				 	velocity_vec.y = -velocity_vec.y;				 	
+				 	_direction.y = "down";	
+				}
+				
+						
+				_time.y = 0;
+				count++;
+								
+			}else{
+				if (circle.cx.animVal.value < leftwall && _direction.x === "left"){
+					_direction.x = "right";					 
+					position_vec.x = pos_x(_time.x);				
+					velocity_vec.x = -vel_x(_time.x);
+					angular_position.prev = angular_position.next;
+					angular_position.next = rotation(_time.x, velocity_vec.y)/5;																					
+					_time.x = 0;					
+				}
+				else if (circle.cx.animVal.value < leftwall && _direction.x === "right"){
+					_direction.x = "left";
+					position_vec.x = pos_x(_time.x);				
+					velocity_vec.x = -vel_x(_time.x);
+					angular_position.prev = angular_position.next;
+					angular_position.next = rotation(_time.x, velocity_vec.y)/5;															
+					_time.x = 0;					
+				}
+							
+				if (circle.cx.animVal.value > 1500 && _direction.x === "right"){
+					_direction.x = "left";
+					position_vec.x = pos_x(_time.x);
+					velocity_vec.x = -vel_x(_time.x);
+					angular_position.prev = angular_position.next;
+					angular_position.next = rotation(_time.x, velocity_vec.y)/5;
+						
+					_time.x = 0;				
+				}
+				else if (circle.cx.animVal.value > 1500 && _direction.x === "left"){
+					_direction.x = "right";
+					position_vec.x = pos_x(_time.x);
+					velocity_vec.x = -vel_x(_time.x);	
+					angular_position.prev = angular_position.next;
+					angular_position.next = rotation(_time.x, velocity_vec.y)/5;
+							
+					_time.x = 0;				
+				}
+				if (vel_y(_time.y) <= 0){
+					_direction.y = "down";				
+				}
+				
+			}
+			
+			count = 1;
+			vel_y(_time.y += delta);
+			pos_y(_time.y += delta);
+			vel_x(_time.x += delta);
+			pos_x(_time.x += delta);
+			rotation(_time.y += delta, velocity_vec.x);
+
+			
+
+			circle.setAttribute("cx", pos_x(_time.x));
+			circle.setAttribute("cy", pos_y(_time.y));
+			line.setAttribute("y1", _line.y - ln(_time.l += delta));
+			line.setAttribute("y2", _line.y + ln(_time.l += delta));
+			
+			trans.setAttribute("from", angular_position.prev + " " + pos_x(_time.x) + " " + pos_y(_time.y));			
+			trans.setAttribute("to", angular_position.prev + angular_position.next + " " + pos_x(_time.x) + " " + pos_y(_time.y));
+			
+										
+		}
+		function board_deflect (x,y){
+			let ang, magnitude;
+			magnitude = Math.sqrt(Math.pow(x,2) + Math.pow(y,2));			
+			ang = Math.atan(y/x) * 180 / Math.PI;	
+			x_prime = Math.cos((ang - angle()) * Math.PI / 180) * magnitude;		
+			y_prime = Math.sin((ang - angle()) * Math.PI / 180) * magnitude;			
+			return [x_prime, y_prime];
+		}
+
+		function wall_edge_deflect (x,y,angle){
+			let magnitude, x_sign = 1, y_sign = 1;
+			if (x < 0){
+				x_sign = -1;
+			}
+			if (y < 0){
+				y_sign = -1;
+			}
+			magnitude = Math.sqrt(Math.pow(x,2) + Math.pow(y,2));			
+			x_prime = Math.cos(angle * Math.PI / 180) * magnitude;		
+			y_prime = Math.sin(angle * Math.PI / 180) * magnitude;			
+			return [x_sign * x_prime, x_sign * y_prime];
+		}
+
+		function wall_edge_zone (){
+			let d, h, lambda, alpha;			
+			alpha= Math.atan(vel_y(_time.y) / vel_x(_time.x)) * 180 / Math.PI;
+			lambda = Math.atan((pos_y(_time.y) - wall.y.animVal.value) / (pos_x(_time.x) - wall.width.animVal.value - wall.x.animVal.value)) * 180 / Math.PI;;
+			h = Math.sin(alpha * Math.PI / 180) * radius;			
+			d = Math.sqrt(Math.pow((pos_y(_time.y) - wall.y.animVal.value),2) + Math.pow((pos_x(_time.x) - wall.width.animVal.value - wall.x.animVal.value),2));
+			if ((circle.cy.animVal.value - wall.y.animVal.value) > 0 || (wall.y.animVal.value - circle.cy.animVal.value > h)) {
+				return false;
+			}else if (vel_y(_time.y) < 0 && vel_x(_time.x) < 0){
+				return 90-lambda;
+			}else{
+				return alpha-lambda;
+			}				
+		}
+
+	//This function will be activated later to allow user change angular position of the ball ramp...
+
+		document.onkeydown = (e) => {
+			// _line.y = 325;
+			if (e.keyCode === 37){
+				line.setAttribute("y1", _line.y + 45);
+				line.setAttribute("y2", _line.y - 45);
+								
+			}
+			if (e.keyCode === 39){
+				line.setAttribute("y1", _line.y - 45);
+				line.setAttribute("y2", _line.y + 45);
+								
+			}
+			if (e.keyCode === 40){
+				line.setAttribute("y1", _line.y);
+				line.setAttribute("y2", _line.y);
+								
+			}
+		};			
+		</script>		
+	</body>	
+</html>
+
+
