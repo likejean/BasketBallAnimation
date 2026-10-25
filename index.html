@@ -46,6 +46,7 @@
 		</defs>		  
 		<rect id = "wall" x="0" y="200" width="472.27" height="1075" stroke="none" fill="url(#img1)"></rect>
 		<line x1="500" y1="555" x2="1500" y2="555" style="stroke:black; stroke-width:10"></line>
+		<image id="right-wall" xlink:href="bricks.jpg" x="1500" y="-75" width="500" height="1150" preserveAspectRatio="none"></image>
 	</svg><br>
 	<button type="button" class="btn btn-danger" onclick = clearTimeout(the_timer)>STOP</button>
 	<button type="button" class="btn btn-success" onclick = 'the_timer = setInterval(set_timer, increment_t)'>RESUME</button>
@@ -75,7 +76,7 @@
 		circle, line, slope, trans, duration = 0, 
 		radius, the_timer, leftwall, brickbase,
 		count = 0;		
-		var wall;		
+		var wall, rightWall;
 	
 		//Calculation functions
 		var vel_y = (t) => 188.81 * t + velocity_vec.y;
@@ -95,6 +96,25 @@
 			line.setAttribute("y1", ramp_center.y - half_height);
 			line.setAttribute("x2", ramp_center.x + half_width);
 			line.setAttribute("y2", ramp_center.y + half_height);
+		}
+		function resolve_right_wall_collision(){
+			const wallX = rightWall.x.baseVal.value;
+			const wallRight = wallX + rightWall.width.baseVal.value;
+			const wallTop = rightWall.y.baseVal.value;
+			const wallBottom = wallTop + rightWall.height.baseVal.value;
+			const x = pos_x(_time.x);
+			const y = pos_y(_time.y);
+			const velocityX = vel_x(_time.x);
+
+			if (x + Number(radius) > wallX && x - Number(radius) < wallRight &&
+				y + Number(radius) > wallTop && y - Number(radius) < wallBottom){
+				position_vec.x = wallX - Number(radius) + 1;
+				if (velocityX > 0){
+					velocity_vec.x = -velocityX;
+				}
+				_time.x = 0;
+				_direction.x = "left";
+			}
 		}
 		function resolve_wall_collision(){
 			const x = pos_x(_time.x);
@@ -186,6 +206,7 @@
 			trans = document.getElementById("trans");
 			radius = document.getElementsByTagName("circle")[0].getAttribute("r");
 			wall = document.getElementById("wall");
+			rightWall = document.getElementById("right-wall");
 			ramp_phase = (ramp_phase + 2 * Math.PI * ramp_frequency * delta) % (2 * Math.PI);
 			ramp_angle = ramp_amplitude * Math.sin(ramp_phase);
 			update_ramp_geometry();
@@ -251,6 +272,7 @@
 			count = 1;
 			_time.x += delta;
 			_time.y += delta;
+			resolve_right_wall_collision();
 			resolve_wall_collision();
 			resolve_canvas_collision();
 
@@ -311,5 +333,3 @@
 		</script>		
 	</body>	
 </html>
-
-
